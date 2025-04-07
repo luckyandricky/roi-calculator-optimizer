@@ -173,13 +173,51 @@
         <thead>
           <tr>
             <th class="py-4 px-4 text-medium bg-dark-medium-blue text-white text-left">Keyword</th>
-            <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">Volume</th>
-            <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">KD</th>
-            <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">CPC</th>
-            <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">
-              优化回报率
+            <th 
+              class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center cursor-pointer hover:bg-medium-blue"
+              @click="handleSort('volume')"
+            >
+              Volume
+              <span v-if="sortConfig.column === 'volume'" class="ml-1">
+                {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+              </span>
             </th>
-            <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">Country</th>
+            <th 
+              class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center cursor-pointer hover:bg-medium-blue"
+              @click="handleSort('kd')"
+            >
+              KD
+              <span v-if="sortConfig.column === 'kd'" class="ml-1">
+                {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th 
+              class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center cursor-pointer hover:bg-medium-blue"
+              @click="handleSort('cpc')"
+            >
+              CPC
+              <span v-if="sortConfig.column === 'cpc'" class="ml-1">
+                {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th 
+              class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center cursor-pointer hover:bg-medium-blue"
+              @click="handleSort('roi')"
+            >
+              优化回报率
+              <span v-if="sortConfig.column === 'roi'" class="ml-1">
+                {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th 
+              class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center cursor-pointer hover:bg-medium-blue"
+              @click="handleSort('country')"
+            >
+              Country
+              <span v-if="sortConfig.column === 'country'" class="ml-1">
+                {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -233,6 +271,10 @@ export default {
     return {
       originalArr: [],
       processedArr: [],
+      sortConfig: {
+        column: 'volume',
+        direction: 'desc' // 'asc' or 'desc'
+      },
 
       kd: {
         visible: false,
@@ -305,8 +347,35 @@ export default {
         }
       })
 
-      this.originalArr.sort((a, b) => b.roi - a.roi)
+      this.sortData()
+      this.filterOriginalArr()
+    },
 
+    sortData() {
+      const { column, direction } = this.sortConfig
+      this.originalArr.sort((a, b) => {
+        if (column === 'country') {
+          const aCountry = a.country || ''
+          const bCountry = b.country || ''
+          return direction === 'asc' 
+            ? aCountry.localeCompare(bCountry)
+            : bCountry.localeCompare(aCountry)
+        }
+        
+        return direction === 'asc' 
+          ? a[column] - b[column]
+          : b[column] - a[column]
+      })
+    },
+
+    handleSort(column) {
+      if (this.sortConfig.column === column) {
+        this.sortConfig.direction = this.sortConfig.direction === 'asc' ? 'desc' : 'asc'
+      } else {
+        this.sortConfig.column = column
+        this.sortConfig.direction = 'desc'
+      }
+      this.sortData()
       this.filterOriginalArr()
     },
 
