@@ -34,8 +34,7 @@ export default {
   buildModules: [
     '@nuxtjs/eslint-module',
     '@nuxtjs/tailwindcss',
-    '@nuxtjs/google-gtag',
-    ...(process.env.NODE_ENV !== 'production' ? ['@nuxtjs/proxy'] : []),
+    '@nuxtjs/google-gtag'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
@@ -44,12 +43,5 @@ export default {
     '@nuxtjs/sitemap'
   ],
 
-  build: {},
-
-  proxy: {
-    '/api/': {
-      target: process.env.DEV_URL,
-      pathRewrite: { '^/api/': '/' }
-    },
-  },
+  build: {}
 }

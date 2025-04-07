@@ -127,6 +127,40 @@
           </div>
         </div>
 
+        <div class="flex relative">
+          <button
+            type="button"
+            class="z-10 px-4 py-2 font-medium text-center text-white bg-medium-blue border-medium-blue rounded-lg space-x-2"
+            @click="country.visible = !country.visible"
+          >
+            <div v-if="country.value" class="flex">
+              <span class="mr-2">Country: {{ country.value }}</span>
+              <img
+                src="~/assets/icons/close.svg"
+                width="14"
+                @click.stop="updateCountry('')"
+              />
+            </div>
+            <div v-else class="flex">
+              <span class="text-grey mr-6">Country</span>
+              <img src="~/assets/icons/drogdown.svg" width="12" />
+            </div>
+          </button>
+          <div
+            v-if="country.visible"
+            class="absolute top-full left-0 mt-2 bg-medium-blue rounded-lg shadow-lg py-2 z-20 w-full"
+          >
+            <div
+              v-for="(item, index) in country.selections"
+              :key="index"
+              class="flex justify-center px-4 py-2"
+              @click="updateCountry(item.code)"
+            >
+              <span class="text-grey cursor-pointer">{{ item.name }} ({{ item.code }})</span>
+            </div>
+          </div>
+        </div>
+
         <a
           type="button"
           class="flex w-full min-w-max flex-row items-center justify-center space-x-2 rounded-lg bg-medium-blue py-2 px-3 text-sm font-semibold text-white shadow-button-secondary transition-all duration-100 hover:bg-medium-blueHover active:bg-medium-blue sm:w-fit sm:px-5 sm:text-base cursor-pointer"
@@ -145,6 +179,7 @@
             <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">
               优化回报率
             </th>
+            <th class="py-4 px-8 text-medium bg-dark-medium-blue text-white text-center">Country</th>
           </tr>
         </thead>
         <tbody>
@@ -169,6 +204,18 @@
             </td>
             <td class="py-4 px-8 text-medium text-orange text-center font-bold">
               {{ item.roi }}
+            </td>
+            <td class="py-4 px-8 text-medium text-white text-center">
+              <select
+                v-model="item.country"
+                class="bg-dark-medium-blue text-white rounded px-2 py-1 focus:outline-none"
+                @change="updateItemCountry(item)"
+              >
+                <option value="">选择国家</option>
+                <option v-for="country in country.selections" :key="country.code" :value="country.code">
+                  {{ country.name }} ({{ country.code }})
+                </option>
+              </select>
             </td>
           </tr>
         </tbody>
@@ -215,6 +262,23 @@ export default {
         ],
         min: '',
         max: ''
+      },
+
+      country: {
+        visible: false,
+        value: '',
+        selections: [
+          { code: 'US', name: '美国' },
+          { code: 'UK', name: '英国' },
+          { code: 'CA', name: '加拿大' },
+          { code: 'AU', name: '澳大利亚' },
+          { code: 'DE', name: '德国' },
+          { code: 'FR', name: '法国' },
+          { code: 'IT', name: '意大利' },
+          { code: 'ES', name: '西班牙' },
+          { code: 'JP', name: '日本' },
+          { code: 'IN', name: '印度' }
+        ]
       }
     }
   },
@@ -235,7 +299,8 @@ export default {
             kd: item['Keyword Difficulty'],
             cpc: item['CPC (USD)'],
             roi: item.roi.toFixed(2),
-            url: 'https://www.google.com/search?q=' + item.Keyword
+            url: 'https://www.google.com/search?q=' + item.Keyword,
+            country: item.Country
           })
         }
       })
@@ -263,6 +328,12 @@ export default {
       this.filterOriginalArr()
     },
 
+    updateCountry(value) {
+      this.country.value = value
+      this.country.visible = false
+      this.filterOriginalArr()
+    },
+
     adjustRangeArr(rangeArr, minValue, maxValue) {
       if (rangeArr.length) {
         rangeArr[0] = parseInt(rangeArr[0] || minValue)
@@ -276,10 +347,12 @@ export default {
     filterOriginalArr() {
       const kdValuesLength = this.kd.values.length
       const volumeValuesLength = this.volume.values.length
+      const countryValue = this.country.value
 
       this.processedArr = this.originalArr.filter((item) => {
         let kdCondition = true
         let volumeCondition = true
+        let countryCondition = true
 
         if (kdValuesLength) {
           kdCondition = item.kd >= this.kd.values[0] && item.kd <= this.kd.values[1]
@@ -290,7 +363,11 @@ export default {
             item.volume >= this.volume.values[0] && item.volume <= this.volume.values[1]
         }
 
-        return kdCondition && volumeCondition
+        if (countryValue) {
+          countryCondition = item.country === countryValue
+        }
+
+        return kdCondition && volumeCondition && countryCondition
       })
     },
 
@@ -320,6 +397,12 @@ export default {
       const view = new Uint8Array(buf)
       for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
       return buf
+    },
+
+    updateItemCountry(item) {
+      // 更新数据后重新排序
+      this.originalArr.sort((a, b) => b.roi - a.roi)
+      this.filterOriginalArr()
     }
   }
 }
